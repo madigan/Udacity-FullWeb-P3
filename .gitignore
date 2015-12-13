@@ -1,0 +1,3 @@
+.vagrant
+catalog/__pycache__
+*.pyc
