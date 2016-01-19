@@ -1,0 +1,15 @@
+{% extends "layout/template.html" %}
+{% block title %}Add Item{% endblock %}
+{% block content %}
+<h2>Add Item</h2>
+<form method="POST" action="/catalog/items/">
+    <label>Name: </label>
+    <input name="name" type="textbox"></input>
+    <br />
+    <label>Description: </description>
+    <br />
+    <textarea name="description" rows="5" cols="80"></textarea>
+    <br />
+    <input type="submit" value="Create Item"></input>
+</form>
+{% endblock %}

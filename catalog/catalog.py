@@ -1,42 +1,76 @@
-from flask import Flask
+from flask import Flask, render_template, g, request, flash, redirect, url_for
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+import sys
+from database_setup import Item
 
 app = Flask(__name__)
 
-# I've created the routes to support the screenshots from the "Getting Started"
-# guide, but I've also added more RESTful looking APIs which would be more
-# intuitive to a developer from an API perspective.
+cfgFile = 'config'
+if(len(sys.argv) > 1):
+    cfgFile = str(sys.argv[1])
+app.config.from_object(cfgFile)
+app.logger.debug("Loaded config file: '%s'" % cfgFile)
+
+engine = create_engine(app.config["DB_STRING"], echo=app.config["DB_ECHO"])
+Session = sessionmaker()
+Session.configure(bind=engine)
+
+@app.before_request
+def before_request():
+    g.s = Session() 
+
+@app.teardown_request
+def teardown_request(exception):
+    g.s.close()
 
 @app.route('/')
-@app.route('/catalog')
+@app.route('/catalog/')
 def index():
-	return "Index"
-	
-@app.route('/catalog/categories/<category>')
-@app.route('/catalog/<category>')
-def category(category):
-	return "Category Page"
+	return render_template("index.html")
 
-@app.route('/catalog/items/<item>')
-@app.route('/catalog/<category>/<item>')
-def item(category, item):
-	return "Item Page"
+@app.route('/catalog/items/', methods=["GET", "POST", "DELETE"])
+def item_list():
+    if request.method == 'POST':
+        # Read the post
+        name = request.form['name']
+        description = request.form['description']
+        # Handle update requests
+        if 'id' in request.form:
+            id = request.form['id']
+            g.s.query(Item).filter(Item.id==id)\
+                .update({"name":name, "description":description})
+            g.s.commit()
+            flash("'%s' has been updated succesfully!" % name)
+        # Handle creation requests
+        else:
+            g.s.add(Item(name=name, description=description))
+            g.s.commit()
+            flash("'%s' has been created succesfully!" % name)
+    # Load the page
+    items = g.s.query(Item).all()
+    return render_template('list_items.html', items=items)
+    
+@app.route('/catalog/items/<int:item_id>', methods=['GET'])
+def item_view(item_id):
+    item = g.s.query(Item).filter(Item.id == item_id).first()
+    return render_template('view_item.html', item=item)
 	
-@app.route('/catalog/items/<item>/edit')
-@app.route('/catalog/<category>/<item>/edit')	
-def item_edit(item):
-	return "Item Edit Page"
+@app.route('/catalog/items/<item_id>/edit')
+def item_edit(item_id):
+    item = g.s.query(Item).filter(Item.id == item_id).first()
+    return render_template('edit_item.html', item=item)
 	
-@app.route('/catalog/items/<item>/delete')
-@app.route('/catalog/<category>/<item>/delete')
-def item_delete(item):
-	return "Item Deletion Page"
-	
-# JSON API
-# TODO: Consolidate this based on extension
-@app.route('/catalog.json')
-def index_json():
-	return "{ 'page':'index' }"
-	
+@app.route('/catalog/items/<item_id>/delete', methods=['GET','POST'])
+def item_delete(item_id):
+    if request.method=='POST':
+        g.s.query(Item).filter(Item.id==item_id).delete()
+        g.s.commit()
+        flash("The item has been deleted successfully!")
+        return redirect(url_for('item_list'))
+    else:
+        item = g.s.query(Item).filter(Item.id == item_id).first()
+        return render_template('delete_item.html', item=item)
 	
 if __name__ == '__main__':
 	app.debug = True

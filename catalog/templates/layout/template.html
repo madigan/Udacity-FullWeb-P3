@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link rel="stylesheet" href="/static/style.css" />
+        <title>{% block title %}{% endblock %} - MiCatalog</title>
+    </head>
+    <body>
+        <div id="header" class='section'>
+            <h1>{% block header %}{% endblock %}MiCatalog</h1>
+        </div>
+        <div id="navigation" class='section'>
+            <a href="/">Home</a>  <a href="/catalog/items">Items</a>
+        </div>
+        <div id="content" class='section'>
+            <ul>
+            {% for message in get_flashed_messages() %}
+                <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% block content %}{% endblock %}
+        </div>
+        <div id="footer" class='section'>
+        {% block footer %}
+        &copy; Copyright 2016 by <a href="http://silferein.com">John Lynn</a>.
+        {% endblock %}
+        </div>
+    </body>
+</html>

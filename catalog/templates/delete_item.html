@@ -1,0 +1,10 @@
+{% extends "layout/template.html" %}
+{% block title %}Delete Item{% endblock %}
+{% block content %}
+<h2>Delete Item?</h2>
+<p>Are you sure you want to delete '{{item.name}}'?</p>
+<form method="POST" action="/catalog/items/{{item.id}}/delete">
+    <input type="submit" value="Delete Item"></input>
+</form>
+<a href="/catalog/items/{{item.id}}">Back</a>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "layout/template.html" %}
+{% block title %}Edit Item{% endblock %}
+{% block content %}
+<h2>Update Item</h2>
+<form method="POST" action="/catalog/items/">
+    <input name="id" type="hidden" value="{{item.id}}" />
+    <label>Name: </label>
+    <input name="name" type="textbox" value="{{item.name}}"></input>
+    <br />
+    <label>Description: </description>
+    <br />
+    <textarea name="description" rows="5" cols="80" value="">{{item.description}}</textarea>
+    <br />
+    <input type="submit" value="Update Item"></input>
+</form>
+{% endblock %}
