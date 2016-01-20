@@ -1,0 +1,11 @@
+{% extends "layout/template.html" %}
+{% block title %}Delete Category{% endblock %}
+{% block header %}Delete Category - {% endblock %}
+{% block content %}
+<h2>Delete Category?</h2>
+<p>Are you sure you want to delete '{{category.name}}'?</p>
+<form method="POST" action="{{url_for('delete_category', category_id=category.id)}}">
+    <input type="submit" value="Delete Category"></input>
+</form>
+<a href="{{url_for('view_category', category_id=category.id)}}">Back</a>
+{% endblock %}

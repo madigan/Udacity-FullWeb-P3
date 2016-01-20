@@ -2,11 +2,18 @@
 {% block title %}Add Item{% endblock %}
 {% block content %}
 <h2>Add Item</h2>
-<form method="POST" action="/catalog/items/">
-    <label>Name: </label>
+<form method="POST" action="{{url_for('add_item')}}">
+    <label for="name">Name: </label>
     <input name="name" type="textbox"></input>
     <br />
-    <label>Description: </description>
+    <label for="category_id">Category: </label>
+    <select name="category_id">
+    {% for category in categories %}
+        <option value="{{category.id}}">{{category.name}}</option>
+    {% endfor %}
+    </select>
+    <br />
+    <label for="description">Description: </description>
     <br />
     <textarea name="description" rows="5" cols="80"></textarea>
     <br />

@@ -9,7 +9,9 @@
             <h1>{% block header %}{% endblock %}MiCatalog</h1>
         </div>
         <div id="navigation" class='section'>
-            <a href="/">Home</a>  <a href="/catalog/items">Items</a>
+            <a href="{{url_for('index')}}">Home</a>  
+            <a href="{{url_for('list_categories')}}">Categories</a>
+            <a href="{{url_for('list_items')}}">Items</a>
         </div>
         <div id="content" class='section'>
             <ul>
