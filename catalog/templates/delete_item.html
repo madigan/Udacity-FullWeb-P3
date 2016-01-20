@@ -3,8 +3,8 @@
 {% block content %}
 <h2>Delete Item?</h2>
 <p>Are you sure you want to delete '{{item.name}}'?</p>
-<form method="POST" action="/catalog/items/{{item.id}}/delete">
+<form method="POST" action="{{url_for('delete_item', item_id=item.id)}}">
     <input type="submit" value="Delete Item"></input>
 </form>
-<a href="/catalog/items/{{item.id}}">Back</a>
+<a href="{{url_for('view_item', item_id=item.id)}}">Back</a>
 {% endblock %}

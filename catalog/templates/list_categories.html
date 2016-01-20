@@ -1,0 +1,11 @@
+{% extends "layout/template.html" %}
+{% block title %}Categories{% endblock %}
+{% block header %}Categories - {% endblock %}
+{% block content %}
+<ul>
+{% for category in categories %}
+    <li><a href="{{url_for('view_category', category_id=category.id)}}">{{category.name}}</a></li>
+{% endfor %}
+</ul>
+<a href="{{url_for('add_category')}}">Add Category</a>
+{% endblock %}

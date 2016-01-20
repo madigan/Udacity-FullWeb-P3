@@ -2,7 +2,7 @@
 {% block title %}Add Item{% endblock %}
 {% block content %}
 <h2>Add Item</h2>
-<form method="POST" action="/catalog/items/">
+<form method="POST" action="{{url_for('add_item')}}">
     <label for="name">Name: </label>
     <input name="name" type="textbox"></input>
     <br />

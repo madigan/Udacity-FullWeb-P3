@@ -2,7 +2,7 @@
 {% block title %}Edit Item{% endblock %}
 {% block content %}
 <h2>Update Item</h2>
-<form method="POST" action="/catalog/items/">
+<form method="POST" action="{{url_for('edit_item', item_id=item.id)}}">
     <input name="id" type="hidden" value="{{item.id}}" />
     <label>Name: </label>
     <input name="name" type="textbox" value="{{item.name}}"></input>

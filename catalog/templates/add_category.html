@@ -1,0 +1,11 @@
+{% extends "layout/template.html" %}
+{% block title %}Add Category{% endblock %}
+{% block header %}Add Category - {% endblock %}
+{% block content %}
+<form method="POST" action="{{url_for('add_category')}}">
+    <label for="name">Name: </label>
+    <input name="name" type="textbox"></input>
+    <br />
+    <input value="Create Category" type="submit" />
+</form>
+{% endblock %}

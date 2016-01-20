@@ -20,3 +20,7 @@ div.section {
 span.label {
     font-weight: bold;
 }
+div.column {
+    float: left;
+    padding: 10px 20px;
+}

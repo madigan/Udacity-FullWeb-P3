@@ -5,8 +5,8 @@
 <h2>Items</h2>
 <ul>
     {% for item in items %}
-    <li><a href="/catalog/items/{{item.id}}">{{item.name}}</a></li>
+    <li><a href="{{url_for('view_item', item_id=item.id)}}">{{item.name}}</a></li>
     {% endfor %}
 </ul>
-<a href="/catalog/items/add/">Add Item</a>
+<a href="{{url_for('add_item')}}">Add Item</a>
 {% endblock %}
