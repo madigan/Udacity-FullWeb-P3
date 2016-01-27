@@ -3,3 +3,5 @@ catalog/__pycache__
 *.pyc
 *~
 *.db
+catalog/client_secrets.json
+catalog/secrets.py
