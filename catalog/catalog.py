@@ -44,7 +44,7 @@ def teardown_request(exception):
     g.s.close()
 
 @app.route('/login/')
-def showLogin():
+def login():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
     login_session['state'] = state
     return render_template(
@@ -135,6 +135,7 @@ def gdiscount():
         response.headers['Content-Type'] = 'application/json'
         return response
     else:
+        app.logger.error('Failed to revoke token for given user: %s.' % login_session['name'])
         response = make_response(json.dumps('Failed to revoke token for given user.'), 400)
         response.headers['Content-Type'] = 'application/json'
         return response
@@ -244,6 +245,21 @@ def delete_category(category_id):
         g.s.commit()
         flash("The category has been deleted successfully!")
         return redirect(url_for('list_categories'))
+        
+## Error Pages ##
+
+@app.errorhandler(401)
+def access_denied(error):
+    app.logger.warning('Access Denied: ' + error)
+    return render_template('access_denied.html'), 401
+    
+@app.errorhandler(404)
+def page_not_found(error):
+    return render_template('page_not_found.html'), 404
+    
+@app.errorhandler(500)
+def internal_error(error):
+    return render_template('internal_error.html'), 500
 
 ## App Server Code ##
 if __name__ == '__main__':

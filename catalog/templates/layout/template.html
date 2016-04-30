@@ -12,6 +12,12 @@
             <a href="{{url_for('index')}}">Home</a>  
             <a href="{{url_for('list_categories')}}">Categories</a>
             <a href="{{url_for('list_items')}}">Items</a>
+            <span> | </span>
+            {% if not user_name %}
+            <a href="{{url_for('login')}}">Login</a>
+            {% else %}
+            <span>Hello {{user_name}}! (Not {{user_name}}? <a href="{{url_for('logout')}}">logout</a>.</span>
+            {% endif %}
         </div>
         <div id="content" class='section'>
             <ul>
