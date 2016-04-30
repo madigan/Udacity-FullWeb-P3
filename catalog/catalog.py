@@ -114,8 +114,8 @@ def gconnect():
     print(output)
     return output
 
-@app.route("/gdisconnect/")
-def gdiscount():
+@app.route("/logout/")
+def logout():
     credentials = login_session.get('credentials')
     if credentials is None:
         response = make_response(json.dumps('Current user not connected.'), 401)
@@ -130,22 +130,16 @@ def gdiscount():
         del login_session['picture']
         del login_session['credentials']
         del login_session['gplus_id']
-    
-        response = make_response(json.dumps('Successfully disconnected.'), 200)
-        response.headers['Content-Type'] = 'application/json'
-        return response
     else:
         app.logger.error('Failed to revoke token for given user: %s.' % login_session['name'])
-        response = make_response(json.dumps('Failed to revoke token for given user.'), 400)
-        response.headers['Content-Type'] = 'application/json'
-        return response
+    return redirect(url_for('index'))
 
 @app.route('/')
 @app.route('/catalog/')
 def index():
     categories = g.s.query(Category).all()
     items = g.s.query(Item).order_by(desc(Item.id)).limit(5)
-    return render_template("index.html", categories=categories, items=items)
+    return render_template("index.html", categories=categories, items=items, name=login_session.get('name'))
 
 ## Item Routing ##
 
