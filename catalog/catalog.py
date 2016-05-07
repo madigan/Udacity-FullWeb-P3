@@ -139,7 +139,11 @@ def logout():
 def index():
     categories = g.s.query(Category).all()
     items = g.s.query(Item).order_by(desc(Item.id)).limit(5)
-    return render_template("index.html", categories=categories, items=items, name=login_session.get('name'))
+    return render_template(
+        "index.html", 
+        categories=categories, 
+        items=items, 
+        login_session=login_session)
 
 ## Item Routing ##
 
@@ -147,13 +151,19 @@ def index():
 def list_items():
     # Load the page
     items = g.s.query(Item).all()
-    return render_template('list_items.html', items=items)
+    return render_template(
+        'list_items.html', 
+        items=items, 
+        login_session=login_session)
     
 @app.route('/catalog/items/add/', methods=['GET', 'POST'])
 def add_item():
     if request.method == 'GET':
         categories = g.s.query(Category).all()
-        return render_template('add_item.html', categories=categories)
+        return render_template(
+            'add_item.html', 
+            categories=categories, 
+            login_session=login_session)
     else:
         g.s.add(
             Item(
@@ -167,14 +177,21 @@ def add_item():
 @app.route('/catalog/items/<int:item_id>', methods=['GET'])
 def view_item(item_id):
     item = g.s.query(Item).filter(Item.id == item_id).first()
-    return render_template('view_item.html', item=item)
+    return render_template(
+        'view_item.html', 
+        item=item, 
+        login_session=login_session)
 	
 @app.route('/catalog/items/<int:item_id>/edit', methods=['GET', 'POST'])
 def edit_item(item_id):
     if request.method == 'GET':
         item = g.s.query(Item).filter(Item.id == item_id).first()
         categories = g.s.query(Category).all()
-        return render_template('edit_item.html', item=item, categories=categories)
+        return render_template(
+            'edit_item.html', 
+            item=item, 
+            categories=categories, 
+            login_session=login_session)
     else:
         g.s.query(Item).filter(Item.id==request.form['id']).update(
             {"name":        request.form['name'], 
@@ -193,19 +210,27 @@ def delete_item(item_id):
         return redirect(url_for('list_items'))
     else:
         item = g.s.query(Item).filter(Item.id == item_id).first()
-        return render_template('delete_item.html', item=item)
+        return render_template(
+            'delete_item.html', 
+            item=item, 
+            login_session=login_session)
 
 ## Category Routing ##
 
 @app.route('/catalog/categories/')
 def list_categories():
     categories = g.s.query(Category).all()
-    return render_template('list_categories.html', categories=categories)
+    return render_template(
+        'list_categories.html', 
+        categories=categories, 
+        login_session=login_session)
 
 @app.route('/catalog/categories/add/', methods=['GET','POST'])
 def add_category():
     if request.method=='GET':
-        return render_template('add_category.html')
+        return render_template(
+            'add_category.html',
+            login_session=login_session)
     else:
         g.s.add(Category(name=request.form['name']))
         g.s.commit()
@@ -215,13 +240,18 @@ def add_category():
 @app.route('/catalog/categories/<int:category_id>/')
 def view_category(category_id):
     category = g.s.query(Category).filter(Category.id==category_id).first()
-    return render_template('view_category.html', category=category)
+    return render_template('view_category.html', 
+        category=category,
+        login_session=login_session)
     
 @app.route('/catalog/categories/<int:category_id>/edit', methods=['GET','POST'])
 def edit_category(category_id):
     if request.method == 'GET':
         category = g.s.query(Category).filter(Category.id==category_id).first()
-        return render_template('edit_category.html', category=category)
+        return render_template(
+            'edit_category.html', 
+            category=category, 
+            login_session=login_session)
     else:
         g.s.query(Category).filter(Category.id==category_id).update({
             "name":request.form['name']})
@@ -233,7 +263,10 @@ def edit_category(category_id):
 def delete_category(category_id):
     if request.method == 'GET':
         category = g.s.query(Category).filter(Category.id==category_id).first()
-        return render_template('delete_category.html', category=category)
+        return render_template(
+            'delete_category.html', 
+            category=category, 
+            login_session=login_session)
     else:
         g.s.query(Category).filter(Category.id==category_id).delete()
         g.s.commit()
