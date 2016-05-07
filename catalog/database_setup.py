@@ -16,6 +16,13 @@ class Category(Base):
         return "<Category(id='%s', name='%s')>" % (
             self.id, self.name)
 
+    @property
+    def serialize(self):
+        return {
+            'id' : self.id,
+            'name' : self.name
+        }
+        
 class Item(Base):
     __tablename__ = 'items'
 
@@ -29,6 +36,15 @@ class Item(Base):
         return "<Item(id='%s', name='%s', category='%s', description='%s')>" % ( 
             self.id, self.name, self.category.name, self.description)
 
+    @property
+    def serialize(self):
+        return {
+            'id' : self.id,
+            'name' : self.name,
+            'description' : self.description,
+            'category_id' : self.category_id
+        }
+        
 # Re-build the database
 if __name__ == "__main__":
     engine = create_engine(DB_STRING, echo=DB_ECHO)

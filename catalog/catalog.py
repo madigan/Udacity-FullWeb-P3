@@ -1,6 +1,6 @@
 import sys, random, string
 
-from flask import Flask, render_template, g, request, flash, redirect, url_for
+from flask import Flask, render_template, g, request, flash, redirect, url_for, jsonify
 from flask import session as login_session
 from sqlalchemy import create_engine, desc
 from sqlalchemy.orm import sessionmaker
@@ -155,7 +155,12 @@ def list_items():
         'list_items.html', 
         items=items, 
         login_session=login_session)
-    
+@app.route('/catalog/items.json/', methods=["GET"])
+def list_items_json():
+    items = g.s.query(Item).all()        
+    return jsonify(Items=[i.serialize for i in items])
+
+        
 @app.route('/catalog/items/add/', methods=['GET', 'POST'])
 def add_item():
     if request.method == 'GET':
@@ -174,14 +179,18 @@ def add_item():
         flash("'%s' has been created succesfully!" % request.form['name'])
         return redirect(url_for('list_items'))
     
-@app.route('/catalog/items/<int:item_id>', methods=['GET'])
+@app.route('/catalog/items/<int:item_id>/', methods=['GET'])
 def view_item(item_id):
     item = g.s.query(Item).filter(Item.id == item_id).first()
     return render_template(
         'view_item.html', 
         item=item, 
         login_session=login_session)
-	
+@app.route('/catalog/items/<int:item_id>.json/', methods=['GET'])
+def view_item_json(item_id):
+    item = g.s.query(Item).filter(Item.id == item_id).first()
+    return jsonify(item.serialize)
+
 @app.route('/catalog/items/<int:item_id>/edit', methods=['GET', 'POST'])
 def edit_item(item_id):
     if request.method == 'GET':
@@ -224,6 +233,10 @@ def list_categories():
         'list_categories.html', 
         categories=categories, 
         login_session=login_session)
+@app.route('/catalog/categories.json/')
+def list_categories_json():
+    categories = g.s.query(Category).all()
+    return jsonify(Categories=[i.serialize for i in categories])
 
 @app.route('/catalog/categories/add/', methods=['GET','POST'])
 def add_category():
@@ -243,6 +256,10 @@ def view_category(category_id):
     return render_template('view_category.html', 
         category=category,
         login_session=login_session)
+@app.route('/catalog/categories/<int:category_id>.json/')
+def view_category_json(category_id):
+    category = g.s.query(Category).filter(Category.id==category_id).first()
+    return jsonify(category.serialize)
     
 @app.route('/catalog/categories/<int:category_id>/edit', methods=['GET','POST'])
 def edit_category(category_id):
