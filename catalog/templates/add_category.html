@@ -5,6 +5,7 @@
 <form method="POST" action="{{url_for('add_category')}}">
     <label for="name">Name: </label>
     <input name="name" type="textbox"></input>
+    <input name="user_id" type="hidden" value="{{login_session.user.id}}" />
     <br />
     <input value="Create Category" type="submit" />
 </form>

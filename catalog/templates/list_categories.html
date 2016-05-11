@@ -2,10 +2,15 @@
 {% block title %}Categories{% endblock %}
 {% block header %}Categories - {% endblock %}
 {% block content %}
+<h2>Categories</h2>
 <ul>
 {% for category in categories %}
     <li><a href="{{url_for('view_category', category_id=category.id)}}">{{category.name}}</a></li>
 {% endfor %}
 </ul>
+{% if not login_session.user %}
+<p>Log in to add categories.</p>
+{% else %}
 <a href="{{url_for('add_category')}}">Add Category</a>
+{% endif %}
 {% endblock %}

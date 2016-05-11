@@ -5,8 +5,11 @@
 <p><span class='label'>Name: </span>{{ item.name }}</p>
 <p><span class='label'>Category: </span>{{ item.category.name }}</p>
 <p><span class='label'>Description: </span>{{ item.description }}</p>
+<p><span class='label'>Owner: </span>{{ item.user.name }}</p>
+{% if login_session.user and login_session.user.id == item.user_id %}
 <div>
     <a href="{{url_for('edit_item', item_id=item.id)}}">Edit</a>  
     <a href="{{url_for('delete_item', item_id=item.id)}}">Delete</a>
 </div>
+{% endif %}
 {% endblock %}

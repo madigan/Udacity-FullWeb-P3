@@ -1,6 +1,6 @@
 import sys, random, string
 
-from flask import Flask, render_template, g, request, flash, redirect, url_for, jsonify
+from flask import Flask, render_template, g, request, flash, redirect, abort, url_for, jsonify
 from flask import session as login_session
 from sqlalchemy import create_engine, desc
 from sqlalchemy.orm import sessionmaker
@@ -176,6 +176,8 @@ def list_items_json():
 @app.route('/catalog/items/add/', methods=['GET', 'POST'])
 def add_item():
     if request.method == 'GET':
+        if not login_session.get('user'):
+            abort(401)
         categories = g.s.query(Category).all()
         return render_template(
             'add_item.html', 
@@ -186,7 +188,8 @@ def add_item():
             Item(
                 name=       request.form['name'], 
                 description=request.form['description'], 
-                category_id=request.form['category_id']))
+                category_id=request.form['category_id'],
+                user_id=    request.form['user_id']))
         g.s.commit()
         flash("'%s' has been created succesfully!" % request.form['name'])
         return redirect(url_for('list_items'))
@@ -205,8 +208,12 @@ def view_item_json(item_id):
 
 @app.route('/catalog/items/<int:item_id>/edit', methods=['GET', 'POST'])
 def edit_item(item_id):
+    if not login_session.get('user'):
+        abort(401)
     if request.method == 'GET':
         item = g.s.query(Item).filter(Item.id == item_id).first()
+        if login_session.get('user')['id'] is not item.owner_id:
+            abort(401)
         categories = g.s.query(Category).all()
         return render_template(
             'edit_item.html', 
@@ -224,6 +231,8 @@ def edit_item(item_id):
 	
 @app.route('/catalog/items/<int:item_id>/delete', methods=['GET','POST'])
 def delete_item(item_id):
+    if not login_session.get('user'):
+        abort(401)
     if request.method=='POST':
         g.s.query(Item).filter(Item.id==item_id).delete()
         g.s.commit()
@@ -252,12 +261,16 @@ def list_categories_json():
 
 @app.route('/catalog/categories/add/', methods=['GET','POST'])
 def add_category():
+    if not login_session.get('user'):
+        abort(401)
     if request.method=='GET':
         return render_template(
             'add_category.html',
             login_session=login_session)
     else:
-        g.s.add(Category(name=request.form['name']))
+        g.s.add(Category(
+            name=request.form['name'], 
+            user_id=request.form['user_id']))
         g.s.commit()
         flash("'%s' has been created successfully!" % request.form['name'])
         return redirect(url_for('list_categories'))
@@ -275,8 +288,12 @@ def view_category_json(category_id):
     
 @app.route('/catalog/categories/<int:category_id>/edit', methods=['GET','POST'])
 def edit_category(category_id):
+    if not login_session.get('user'):
+        abort(401)
     if request.method == 'GET':
         category = g.s.query(Category).filter(Category.id==category_id).first()
+        if login_session.get('user')['id'] != category.user_id:
+            abort(401)
         return render_template(
             'edit_category.html', 
             category=category, 
@@ -290,6 +307,8 @@ def edit_category(category_id):
     
 @app.route('/catalog/categories/<int:category_id>/delete', methods=['GET','POST'])
 def delete_category(category_id):
+    if not login_session.get('user'):
+        abort(401)
     if request.method == 'GET':
         category = g.s.query(Category).filter(Category.id==category_id).first()
         return render_template(
@@ -306,8 +325,8 @@ def delete_category(category_id):
 
 @app.errorhandler(401)
 def access_denied(error):
-    app.logger.warning('Access Denied: ' + error)
-    return render_template('access_denied.html'), 401
+    app.logger.warning('Access Denied: %s' % error)
+    return render_template('access_denied.html', login_session=login_session), 401
     
 @app.errorhandler(404)
 def page_not_found(error):

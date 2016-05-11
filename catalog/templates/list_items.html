@@ -1,6 +1,6 @@
 {% extends "layout/template.html" %}
-{% block title %}Item List{% endblock %}
-{% block header %}Item List - {% endblock %}
+{% block title %}Items{% endblock %}
+{% block header %}Items - {% endblock %}
 {% block content %}
 <h2>Items</h2>
 <ul>
@@ -8,5 +8,9 @@
     <li><a href="{{url_for('view_item', item_id=item.id)}}">{{item.name}}</a></li>
     {% endfor %}
 </ul>
+{% if not login_session.user %}
+<p>Log in to add items.</p>
+{% else %}
 <a href="{{url_for('add_item')}}">Add Item</a>
+{% endif %}
 {% endblock %}
