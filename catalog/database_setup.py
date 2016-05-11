@@ -12,15 +12,19 @@ class Category(Base):
     name = Column(String)
     items = relationship("Item")
     
+    user_id = Column(Integer, ForeignKey('users.id'))
+    user = relationship("User")
+    
     def __repr__(self):
-        return "<Category(id='%s', name='%s')>" % (
-            self.id, self.name)
+        return "<Category(id='%s', name='%s', user_id='%s')>" % (
+            self.id, self.name, user_id)
 
     @property
     def serialize(self):
         return {
             'id' : self.id,
-            'name' : self.name
+            'name' : self.name,
+            'user_id' : self.user_id
         }
         
 class Item(Base):
@@ -31,10 +35,13 @@ class Item(Base):
     description = Column(String)
     category_id = Column(Integer, ForeignKey('categories.id'))
     category = relationship("Category", back_populates="items")
+    
+    user_id = Column(Integer, ForeignKey('users.id'))
+    user = relationship("User")
 
     def __repr__(self):
-        return "<Item(id='%s', name='%s', category='%s', description='%s')>" % ( 
-            self.id, self.name, self.category.name, self.description)
+        return "<Item(id='%s', name='%s', user_id='%s', category='%s', description='%s')>" % ( 
+            self.id, self.name, user_id, self.category.name, self.description)
 
     @property
     def serialize(self):
@@ -42,9 +49,31 @@ class Item(Base):
             'id' : self.id,
             'name' : self.name,
             'description' : self.description,
-            'category_id' : self.category_id
+            'category_id' : self.category_id,
+            'user_id' : self.user_id
         }
-        
+
+class User(Base):
+    __tablename__ = 'users'
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    google_id = Column(String)
+    picture = Column(String)        
+    
+    def __repr__(self):
+        return "<User(id='%s', name='%s', google_id='%s', picture='%s')>" % (
+            self.id, self.name, self.google_id, self.picture)
+    
+    @property
+    def serialize(self):
+        return {
+            'id' : self.id,
+            'name' : self.name,
+            'google_id' : self.google_id,
+            'picture' : self.picture
+        }
+
 # Re-build the database
 if __name__ == "__main__":
     engine = create_engine(DB_STRING, echo=DB_ECHO)

@@ -12,7 +12,7 @@ import json
 from flask import make_response
 import requests
 
-from database_setup import Item, Category
+from database_setup import Item, Category, User
 
 ## Application Setup ##
 app = Flask(__name__)
@@ -50,7 +50,7 @@ def login():
     return render_template(
         "login.html", 
         client_id=app.config["CLIENT_ID"], 
-        state=login_session['state'])
+        login_session=login_session)
 
 @app.route('/gconnect/', methods=['POST'])
 def gconnect():
@@ -59,6 +59,7 @@ def gconnect():
         response = make_response(json.dumps('Invalid state parameter'), 401)
         response.headers['Content-Type'] 
         return response
+        
     # Exchange google's code for the access token
     code = request.data
     try:
@@ -102,17 +103,28 @@ def gconnect():
     params = {'access_token': credentials.access_token, 'alt':'json'}
     answer = requests.get(userinfo_url, params=params)
     data = json.loads(answer.text)
-    print(data)
-    login_session['name'] = data['name']
-    login_session['picture'] = data['picture']
     
-    # Replace later
+    login_session['user'] = get_or_create_user( data ).serialize
+    
     output = ''
-    output += '<h1>Welcome, %s!</h1>' % login_session['name']
-    output += '<img src="%s" style = "width: 300px; height: 300px; border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;">' % login_session['picture']
-    flash("You are now logged in as %s"%login_session['name'])
-    print(output)
+    output += '<h1>Welcome, %s!</h1>' % login_session['user']['name']
+    output += '<img src="%s" style = "width: 150px; height: 150px; border-radius: 75px;-webkit-border-radius: 75px;-moz-border-radius: 75px;">' % login_session['user']['picture']
+    flash("You are now logged in as %s" % login_session['user']['name'])
     return output
+    
+def get_or_create_user( data ):
+    # Check to see if that user exists
+    user = g.s.query(User).filter(User.google_id == data["id"]).first()
+    if user is None:
+        user = User(
+            name=data['name'],
+            google_id=data['id'],
+            picture=data['picture']
+            )
+        g.s.add(user)
+        g.s.commit()
+    return user
+
 
 @app.route("/logout/")
 def logout():
@@ -125,13 +137,13 @@ def logout():
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
     
-    if result['status'] == '200':
-        del login_session['name']
-        del login_session['picture']
-        del login_session['credentials']
-        del login_session['gplus_id']
-    else:
-        app.logger.error('Failed to revoke token for given user: %s.' % login_session['name'])
+    if result['status'] != '200':
+        app.logger.error('Failed to revoke token for given user: %s.' % login_session['user'].name)
+        
+    del login_session['credentials']
+    del login_session['gplus_id']
+    del login_session['user']
+    flash("You are now logged out.")
     return redirect(url_for('index'))
 
 @app.route('/')

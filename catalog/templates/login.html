@@ -28,7 +28,7 @@ function signInCallback(authResult) {
         $('#signinButton').attr('style', 'display: none');
         $.ajax({
             type: 'POST',
-            url: '/gconnect/?state={{state}}',
+            url: '/gconnect/?state={{login_session.state}}',
             processData: false,
             contentType: 'application/octet-stream; charset=utf-8',
             data: authResult['code'],
