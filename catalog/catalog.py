@@ -212,7 +212,7 @@ def edit_item(item_id):
         abort(401)
     if request.method == 'GET':
         item = g.s.query(Item).filter(Item.id == item_id).first()
-        if login_session.get('user')['id'] is not item.owner_id:
+        if login_session.get('user')['id'] is not item.user_id:
             abort(401)
         categories = g.s.query(Category).all()
         return render_template(
