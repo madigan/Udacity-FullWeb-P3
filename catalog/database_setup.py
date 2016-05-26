@@ -1,8 +1,17 @@
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
 from config import DB_STRING, DB_ECHO
 
+from sqlalchemy.engine import Engine
+from sqlalchemy import event
+
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+    
 Base = declarative_base()
 
 class Category(Base):
@@ -10,10 +19,10 @@ class Category(Base):
     
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    items = relationship("Item")
+    items = relationship("Item", back_populates="category", cascade="all,delete-orphan")
     
     user_id = Column(Integer, ForeignKey('users.id'))
-    user = relationship("User")
+    user = relationship("User", cascade="none")
     
     def __repr__(self):
         return "<Category(id='%s', name='%s', user_id='%s')>" % (
@@ -33,10 +42,10 @@ class Item(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
     description = Column(String)
-    category_id = Column(Integer, ForeignKey('categories.id'))
+    category_id = Column(Integer, ForeignKey('categories.id', ondelete="cascade"))
     category = relationship("Category", back_populates="items")
     
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(Integer, ForeignKey('users.id', ondelete="cascade"))
     user = relationship("User")
 
     def __repr__(self):
@@ -59,7 +68,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
     google_id = Column(String)
-    picture = Column(String)        
+    picture = Column(String)  
     
     def __repr__(self):
         return "<User(id='%s', name='%s', google_id='%s', picture='%s')>" % (

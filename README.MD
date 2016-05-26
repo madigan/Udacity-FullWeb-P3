@@ -19,3 +19,4 @@ Flask 		    Tutorials/Docs 	- pocoo.org
 HTML 		    Reference 	    - w3.org
 Script Order    Tutorials       - html5rocks.com/en/tutorials/speed/script-loading/
 Udacity         Tutorials       - udacity.com
+Cascading Deletes               - http://stackoverflow.com/questions/5033547/sqlachemy-cascade-delete
