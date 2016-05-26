@@ -1,5 +1,6 @@
 import sys, random, string
 
+from functools import wraps
 from flask import Flask, render_template, g, request, flash, redirect, abort, url_for, jsonify
 from flask import session as login_session
 from sqlalchemy import create_engine, desc
@@ -34,6 +35,15 @@ Session = sessionmaker()
 Session.configure(bind=engine)
 
 ## Administrative Methods ##
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not login_session.get('user'):
+            abort(401)
+        else:
+            return f(*args, **kwargs)
+    return decorated_function
 
 @app.before_request
 def before_request():
@@ -174,10 +184,9 @@ def list_items_json():
 
         
 @app.route('/catalog/items/add/', methods=['GET', 'POST'])
+@login_required
 def add_item():
     if request.method == 'GET':
-        if not login_session.get('user'):
-            abort(401)
         categories = g.s.query(Category).all()
         return render_template(
             'add_item.html', 
@@ -207,9 +216,8 @@ def view_item_json(item_id):
     return jsonify(item.serialize)
 
 @app.route('/catalog/items/<int:item_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_item(item_id):
-    if not login_session.get('user'):
-        abort(401)
     if request.method == 'GET':
         item = g.s.query(Item).filter(Item.id == item_id).first()
         if login_session.get('user')['id'] is not item.user_id:
@@ -230,9 +238,8 @@ def edit_item(item_id):
         return redirect(url_for('view_item', item_id=item_id))
 	
 @app.route('/catalog/items/<int:item_id>/delete', methods=['GET','POST'])
+@login_required
 def delete_item(item_id):
-    if not login_session.get('user'):
-        abort(401)
     if request.method=='POST':
         g.s.query(Item).filter(Item.id==item_id).delete()
         g.s.commit()
@@ -260,9 +267,8 @@ def list_categories_json():
     return jsonify(Categories=[i.serialize for i in categories])
 
 @app.route('/catalog/categories/add/', methods=['GET','POST'])
+@login_required
 def add_category():
-    if not login_session.get('user'):
-        abort(401)
     if request.method=='GET':
         return render_template(
             'add_category.html',
@@ -287,9 +293,8 @@ def view_category_json(category_id):
     return jsonify(category.serialize)
     
 @app.route('/catalog/categories/<int:category_id>/edit', methods=['GET','POST'])
+@login_required
 def edit_category(category_id):
-    if not login_session.get('user'):
-        abort(401)
     if request.method == 'GET':
         category = g.s.query(Category).filter(Category.id==category_id).first()
         if login_session.get('user')['id'] != category.user_id:
@@ -306,9 +311,8 @@ def edit_category(category_id):
         return redirect(url_for('view_category', category_id=category_id))
     
 @app.route('/catalog/categories/<int:category_id>/delete', methods=['GET','POST'])
+@login_required
 def delete_category(category_id):
-    if not login_session.get('user'):
-        abort(401)
     if request.method == 'GET':
         category = g.s.query(Category).filter(Category.id==category_id).first()
         return render_template(
