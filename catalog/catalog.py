@@ -37,6 +37,11 @@ Session.configure(bind=engine)
 ## Administrative Methods ##
 
 def login_required(f):
+    """
+    Generates a 401 error if the user is not logged in.
+    Input: The function to be wrapped.
+    Output: The wrapped function.
+    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not login_session.get('user'):
@@ -47,14 +52,29 @@ def login_required(f):
 
 @app.before_request
 def before_request():
+    """
+    Initiates the SQLAlchemy session during the request.
+    
+    Refactor: Session mgmt could be moved to a custom function decorator so it
+    can be limited to only the transactions that need it.
+    """
     g.s = Session() 
 
 @app.teardown_request
 def teardown_request(exception):
+    """
+    Closes the SQLAlchemy session during the request.
+    
+    Refactor: Session mgmt could be moved to a custom function decorator so it
+    can be limited to only the transactions that need it.
+    """
     g.s.close()
 
 @app.route('/login/')
 def login():
+    """
+    Routes the user to the login page and prepares for login.
+    """
     state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
     login_session['state'] = state
     return render_template(
@@ -64,6 +84,11 @@ def login():
 
 @app.route('/gconnect/', methods=['POST'])
 def gconnect():
+    """
+    Attempts to authenticate the user using Google Logins.
+    Precondition: A state has been generated and added to the session.
+    Postcondition: A user is logged in.
+    """
     # Deal with state mismatch shennanigans
     if request.args.get('state') != login_session['state']:
         response = make_response(json.dumps('Invalid state parameter'), 401)
@@ -123,6 +148,9 @@ def gconnect():
     return output
     
 def get_or_create_user( data ):
+    """
+    Retrieves a user (or creates a new one if one doesn't already exist).
+    """
     # Check to see if that user exists
     user = g.s.query(User).filter(User.google_id == data["id"]).first()
     if user is None:
@@ -138,6 +166,9 @@ def get_or_create_user( data ):
 
 @app.route("/logout/")
 def logout():
+    """
+    Logs the user out by revoking their token and removing them from the session.
+    """
     credentials = login_session.get('credentials')
     if credentials is None:
         response = make_response(json.dumps('Current user not connected.'), 401)
@@ -159,6 +190,9 @@ def logout():
 @app.route('/')
 @app.route('/catalog/')
 def index():
+    """
+    Routes the user to the index page.
+    """
     categories = g.s.query(Category).all()
     items = g.s.query(Item).order_by(desc(Item.id)).limit(5)
     return render_template(
@@ -171,6 +205,9 @@ def index():
 
 @app.route('/catalog/items/', methods=["GET"])
 def list_items():
+    """
+    Routes the user to the item list page.
+    """
     # Load the page
     items = g.s.query(Item).all()
     return render_template(
@@ -179,6 +216,9 @@ def list_items():
         login_session=login_session)
 @app.route('/catalog/items.json/', methods=["GET"])
 def list_items_json():
+    """
+    Provides a JSON endpoint to retrieve the item list.
+    """
     items = g.s.query(Item).all()        
     return jsonify(Items=[i.serialize for i in items])
 
@@ -186,6 +226,10 @@ def list_items_json():
 @app.route('/catalog/items/add/', methods=['GET', 'POST'])
 @login_required
 def add_item():
+    """
+    Routes the user to the 'add item' page or creates an item depending on the 
+    request method (GET vs. POST).
+    """
     if request.method == 'GET':
         categories = g.s.query(Category).all()
         return render_template(
@@ -205,6 +249,9 @@ def add_item():
     
 @app.route('/catalog/items/<int:item_id>/', methods=['GET'])
 def view_item(item_id):
+    """
+    Routes the user to the 'view item' page.
+    """
     item = g.s.query(Item).filter(Item.id == item_id).first()
     return render_template(
         'view_item.html', 
@@ -212,12 +259,19 @@ def view_item(item_id):
         login_session=login_session)
 @app.route('/catalog/items/<int:item_id>.json/', methods=['GET'])
 def view_item_json(item_id):
+    """
+    Provides a JSON endpoint to retrieve the item details.
+    """
     item = g.s.query(Item).filter(Item.id == item_id).first()
     return jsonify(item.serialize)
 
 @app.route('/catalog/items/<int:item_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_item(item_id):
+    """
+    Routes the user to the 'edit item' page or updates an item depending on the 
+    request method (GET vs. POST).
+    """
     if request.method == 'GET':
         item = g.s.query(Item).filter(Item.id == item_id).first()
         if login_session.get('user')['id'] is not item.user_id:
@@ -240,6 +294,10 @@ def edit_item(item_id):
 @app.route('/catalog/items/<int:item_id>/delete', methods=['GET','POST'])
 @login_required
 def delete_item(item_id):
+    """
+    Routes the user to the 'delete item' page or deletes an item depending on the 
+    request method (GET vs. POST).
+    """
     if request.method=='POST':
         g.s.query(Item).filter(Item.id==item_id).delete()
         g.s.commit()
@@ -256,6 +314,9 @@ def delete_item(item_id):
 
 @app.route('/catalog/categories/')
 def list_categories():
+    """
+    Routes the user to the category list page.
+    """
     categories = g.s.query(Category).all()
     return render_template(
         'list_categories.html', 
@@ -263,12 +324,19 @@ def list_categories():
         login_session=login_session)
 @app.route('/catalog/categories.json/')
 def list_categories_json():
+    """
+    Provides a JSON endpoint to retrieve the category list.
+    """
     categories = g.s.query(Category).all()
     return jsonify(Categories=[i.serialize for i in categories])
 
 @app.route('/catalog/categories/add/', methods=['GET','POST'])
 @login_required
 def add_category():
+    """
+    Routes the user to the 'add category' page or creates a category depending 
+    on the request method (GET vs. POST).
+    """
     if request.method=='GET':
         return render_template(
             'add_category.html',
@@ -283,18 +351,28 @@ def add_category():
 
 @app.route('/catalog/categories/<int:category_id>/')
 def view_category(category_id):
+    """
+    Routes the user to the 'view category' page.
+    """
     category = g.s.query(Category).filter(Category.id==category_id).first()
     return render_template('view_category.html', 
         category=category,
         login_session=login_session)
 @app.route('/catalog/categories/<int:category_id>.json/')
 def view_category_json(category_id):
+    """
+    Provides a JSON endpoint to retrieve the category details.
+    """
     category = g.s.query(Category).filter(Category.id==category_id).first()
     return jsonify(category.serialize)
     
 @app.route('/catalog/categories/<int:category_id>/edit', methods=['GET','POST'])
 @login_required
 def edit_category(category_id):
+    """
+    Routes the user to the 'edit category' page or edits a category
+    depending on the request method (GET vs. POST).
+    """
     if request.method == 'GET':
         category = g.s.query(Category).filter(Category.id==category_id).first()
         if login_session.get('user')['id'] != category.user_id:
@@ -313,6 +391,11 @@ def edit_category(category_id):
 @app.route('/catalog/categories/<int:category_id>/delete', methods=['GET','POST'])
 @login_required
 def delete_category(category_id):
+    """
+    Routes the user to the 'delete category' page or deletes a category
+    depending on the request method (GET vs. POST). Note that this cascades to
+    all items under that category as well.
+    """
     if request.method == 'GET':
         category = g.s.query(Category).filter(Category.id==category_id).first()
         return render_template(
